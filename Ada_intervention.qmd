@@ -6,7 +6,7 @@ execute:
   echo: true
   warning: false
   message: false
-  cache: true
+  cache: false
   include: true
 prefer-html: true
 #author: ""
@@ -193,7 +193,7 @@ covars
 ## Intercept and slopes for intervention, time1, intervention:time1 (currently all from Lutz et al., 2022)
 
 fixed <- c(0.03, # intercept
-           0.34, # slope intervention (mean of the three effects in Lutz et al.)
+           0.30, # slope intervention (conservative estimand based on cross level effects in Lutz et al.; no intervention x time effect provided)
            0.6, # slope time 1 
            0.4) # slope intervention:time1
 

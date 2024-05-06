@@ -1,0 +1,4 @@
+- source: Ada_intervention.qmd
+  quarto-pub:
+    - id: c698a4c1-c770-4129-a28c-8239387ef0ee
+      url: 'https://anneokk.quarto.pub/ada-an-ai-enabled-clinical-decision-support-tool'
