@@ -1,0 +1,243 @@
+---
+title: "Ada: An AI-Enabled Clinical Decision Support Tool"
+#bibliography: "../../config/AI_Attitudes.bib"
+#csl: "../../config/apa.csl"
+execute:
+  echo: true
+  warning: false
+  message: false
+  cache: true
+  include: true
+prefer-html: true
+#author: ""
+format: 
+  #docx:
+    #reference-doc: "../../config/template_word.docx"
+  html:
+    toc: true
+    toc-depth: 3
+---
+
+
+```{r analysis-preferences}
+# Seed for random number generation
+set.seed(42)
+```
+
+# Metadata
+
+## Title: 
+
+Ada: An AI-Enabled Clinical Decision Support Tool
+
+## Description:
+
+The integration of AI-driven tools such as Ada Health's symptom checker into healthcare settings aims to enhance the clinical decision-making process, improve patient care, and increase diagnostic efficiency. This study specifically evaluates the effectiveness of Ada in aiding healthcare providers and patients in mental health care settings, focusing on a broad range of conditions, particularly low-acuity mental health conditions.
+
+The aim of the study is to assess the impact of the symptom assessment report on the efficiency of disease diagnosis (i.e., time to diagnosis and confidence in diagnosis), patient and provider preparedness for consultation, and patient anxiety and informedness. In addition, the subjective usefulness and ease of use of the Ada symptom checker as a diagnostic aid for psychotherapists will be assessed.
+
+
+# Study information 
+
+## Hypotheses:
+
+*Hypothesis 1*: Ada increases the level of understanding of symptoms. 
+
+*Hypothesis 2*: Ada decreases the level of anxiety. 
+
+*Hypothesis 3*: Ada increases the quality of symptom management. 
+
+*Hypothesis 4*: Ada increases the confidence in choosing the right point of care
+
+*Hypothesis 5*: Ada increases the self-management knowledge. 
+
+*Hypothesis 6*: Ada increases the level of preparedness for psychotherapy session. 
+
+*Hypothesis 7*: Ada increases the satisfaction with therapeutic process.
+
+
+# Design plan 
+
+## Study type:
+
+- Experiment
+
+## Blinding:
+
+- No blinding is involved in this study.
+
+## Is there any additional blinding in this study?
+
+No.
+
+## Study design: 
+
+Between and within subjects design. 
+
+## Randomization:
+
+Randomized experiment (Ada symptom report vs no Ada symptom report)
+
+# Sampling plan 
+
+## Existing data:
+
+Registration prior to creation of data.
+
+## Explanation of existing data:
+
+NA
+
+## Data collection procedures: 
+
+Through healthcare staff at clinics. 
+
+## Sample size:
+
+The results of the simulation study suggest that at least X should be included to reach a power of > 80%. 
+
+## Sample size rationale:
+
+See power analysis. 
+
+## Stopping rule:
+
+Data will be collected until a sufficient sample size is reached (see attached power calculations).
+
+# Variables
+
+## Manipulated variables:
+
+Ada symptom report. 
+
+## Measured variables:
+
+- Symptom understanding 
+- Anxiety
+- Symptom management 
+- Confidence in care choice 
+- Self-management knowledge 
+- Preparedness
+- Satisfaction with therapeutic process 
+
+# Analysis plan
+
+## Statistical models:
+
+Multilevel randomized controlled trial. 
+
+## Transformations:
+
+Grand-mean centering of between variables; person-mean centering of within variables
+
+## Inference criteria:
+
+Confidence intervals and p-values. 
+
+## Missing data: 
+
+NA  
+
+# Other
+
+## Other 
+
+NA
+
+# Power analysis
+
+
+## Example studies for effect size estimation
+
+[Lutz et al. (2022)](https://web.p.ebscohost.com/ehost/pdfviewer/pdfviewer?vid=0&sid=11823c67-6581-4027-975a-4d956177d88b%40redis)
+
+[Merk et al. (2020)](https://www.sciencedirect.com/science/article/pii/S0742051X19309886?casa_token=5hvUnN4cpVIAAAAA:BA3hjuwgmzTQFWkkIbUeXEYBufqv_ThyLJdM1bL7oJGurPZ5piuXsZabuqnqMouODf8dwyGeFw)
+
+[Robertson et al. (2023)](https://guilfordjournals.com/doi/abs/10.1521/jscp.2023.42.3.238)
+
+## Tutorials 
+
+[Effect sizes for experimental trials analyzed with multilevel growth models](https://solomonkurz.netlify.app/blog/2021-04-22-effect-sizes-for-experimental-trials-analyzed-with-multilevel-growth-models-two-of-two/)
+
+[SIMR: an R package for power analysis of generalized linear mixed models by simulation](https://besjournals.onlinelibrary.wiley.com/doi/full/10.1111/2041-210X.12504)
+
+## Estimands
+
+- Intercept
+- Slope for the intervention 
+- Slope for the time effect 
+- Slope for the intervention:time interaction 
+- Random intercepts for participants nested in therapists
+- Residual variance 
+
+
+## Create dataset
+
+```{r}
+patient <- factor(1:50)
+therapist_id <- letters[1:5]
+time <- 0:1
+group <- c("control", "intervention")
+
+patient_full <- rep(patient, 2)
+therapist_full <- rep(rep(therapist_id, each=10), 2)
+time_full <- rep(time, each=50)
+group_full <- rep(rep(group, each=5), 10)
+
+covars <- data.frame(patient=patient_full, therapist=therapist_full, treat=group_full, time=factor(time_full))
+
+covars
+```
+
+```{r}
+## Intercept and slopes for intervention, time1, intervention:time1 (currently all from Lutz et al., 2022)
+
+fixed <- c(0.03, # intercept
+           0.34, # slope intervention (mean of the three effects in Lutz et al.)
+           0.6, # slope time 1 
+           0.4) # slope intervention:time1
+
+## Random intercepts for participants nested in therapist
+rand <- list(0.01)
+
+## residual SD
+res <- 0.7
+```
+
+## Create model 
+
+```{r}
+library(simr)
+model <- makeLmer(y ~ treat*time + (1|therapist), fixef=fixed, VarCorr=rand, sigma=res, data=covars)
+model
+```
+
+## Power analysis 
+
+We are interested in the effect of the intervention. Since the treatment variable is part of an interaction we will assess its effect by comparing the model specified above to the the alternative model that doesn’t include a treatment variable
+
+```{r}
+sim_treat <- powerSim(model, nsim=100, test = fcompare(y~time))
+sim_treat
+```
+
+
+## Increase sample size 
+
+```{r}
+model_ext_patient <- extend(model, within="therapist+treat", n=20)
+model_ext_patient
+```
+
+```{r}
+sim_treat_patient <- powerSim(model_ext_patient, nsim=100, test = fcompare(y~time))
+sim_treat_patient
+```
+
+```{r}
+p_curve_treat <- powerCurve(model_ext_patient, test=fcompare(y~time), within="therapist+treat", breaks=c(5,10,15,20))
+plot(p_curve_treat)
+```
+
+
+
